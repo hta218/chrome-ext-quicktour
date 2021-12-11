@@ -1,4 +1,9 @@
-button {
+body {
+  width: 200px;
+  height: 200px;
+}
+
+/* button {
   height: 30px;
   width: 30px;
   outline: none;
@@ -10,4 +15,4 @@ button {
 button.current {
   box-shadow: 0 0 0 2px white,
               0 0 0 4px black;
-}
+} */
