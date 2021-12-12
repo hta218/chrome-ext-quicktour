@@ -1,53 +1,42 @@
 // Initialize button with user's preferred color
-// let changeColor = document.getElementById("changeColor");
 const getPageTitleButton = document.getElementById("getTitle");
 const titleNode = document.getElementById("title");
+const resNode = document.getElementById("res");
 console.log("=========> - titleNode", titleNode)
 
-// chrome.storage.sync.get("color", ({ color }) => {
-//   changeColor.style.backgroundColor = color;
-// });
-
-// When the button is clicked, inject setPageBackgroundColor into current page
-// changeColor.addEventListener("click", async () => {
-//   console.log("=========> - changeColor click")
-//   let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-//   console.log("=========> - tab", tab)
-
-//   chrome.scripting.executeScript({
-//     target: { tabId: tab.id },
-//     function: setPageBackgroundColor,
-//   });
-// });
+var port = chrome.runtime.connect();
 
 getPageTitleButton.addEventListener("click", async () => {
   let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
+  await chrome.storage.sync.clear()
   chrome.scripting.executeScript({
     target: { tabId: tab.id },
     function: getPageTitle
-  }, () => {
-    console.log('Done')
-    chrome.storage.sync.get("title", ({ title }) => {
-      console.log("=========> - title", title)
-      titleNode.textContent = `The document title is: ${title}`
+  }, async () => {
+    chrome.storage.sync.get("theme", ({ theme }) => {
+      console.log("=========> - theme", theme)
     });
   });
 })
 
 
-function getPageTitle() {
+async function getPageTitle() {
   console.log("=========> - document.title", document.title)
-  chrome.storage.sync.set({ title: document.title });
-  chrome.storage.sync.set({ foo: { bar: 1, baz: [2, 3, 4] } });
-}
+  // chrome.storage.sync.set({ title: document.title });
+  // chrome.storage.sync.set({ foo: { bar: 1, baz: [2, 3, 4] } });
+  const res = await (await fetch('https://foxkit.app/api/public/extension/theme?shop=hta218.myshopify.com&themeId=125944889514')).json()
+  console.log("=========> - res", res)
+  await chrome.storage.sync.set({ theme: res.payload });
 
-// The body of this function will be executed as a content script inside the
-// current page
-function setPageBackgroundColor() {
-  console.log("=========> - setPageBackgroundColor")
-  chrome.storage.sync.get("color", ({ color }) => {
-    console.log("=========> - color", color)
-    document.body.style.backgroundColor = color;
+  chrome.runtime.sendMessage('get-user-data', (response) => {
+    // 3. Got an asynchronous response with the data from the background
+    console.log('received user data', response);
   });
+
+  chrome.runtime.sendMessage({
+    type: 'FOX_X',
+    theme: res.payload
+  });
+
+  return res
 }
